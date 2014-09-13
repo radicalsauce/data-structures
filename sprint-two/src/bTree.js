@@ -1,18 +1,31 @@
 var makeBTree = function(values){
   var tree = Object.create(BTree);
-  tree.values = [];
-  tree.children = [];
-  tree.parent = null;
-  for(var i = 0; i < values.length; i++){
-    tree.insert(values[i]);
-  }
+  tree.root = makeBTreeNode.call(tree, values);
   return tree;
 };
 
-BTree = {
-  insert: function(value) {
+var BTree ={
+  insert: function(values){
+    this.root._insert(values);
+  }
+};
 
-    var node = this.search(value);
+var makeBTreeNode = function(values){
+  var node = Object.create(BTreeNode);
+  node.values = [];
+  node.children = [];
+  node.parent = null;
+  node.containingTree = this;
+  for(var i = 0; i < values.length; i++){
+    node._insert(values[i]);
+  }
+  return node;
+};
+
+BTreeNode = {
+  _insert: function(value) {
+
+    var node = this._search(value);
     if(node === true){
       return false;
     }
@@ -25,18 +38,20 @@ BTree = {
       var tail = node.values.splice(3, 2);
       var median = node.values.pop();
 
-      var parent = makeBTree(median);
+      var parent = makeBTreeNode(median);
       parent.children.push(node);
       node.parent = parent;
 
-      var newNode = makeBTree(tail);
+      var newNode = makeBTreeNode(tail);
       parent.children.push(newNode);
       newNode.parent = parent;
+
+      node.containingTree.root = parent;
 
     }
   },
 
-  search: function(target){
+  _search: function(target){
     if(this.children.length === 0){
       return this;
     }
@@ -47,22 +62,20 @@ BTree = {
       }
     });
 
-    if(target < this.values[0]){
-      return this.children[0].search(target);
-    } else if(target < this.values[1]) {
-      return this.children[1].search(target);
-    } else if(target < this.values[2]) {
-      return this.children[2].search(target);
-    } else {
-      return this.children[3].search(target);
-    }
+    _.each(this.values, function(value, index){
+      if (target < value && this.children[index]) {
+        return this.children[index]._search(target);
+      }
+    });
+
+    return this.children[4]._search(target);
 
   },
-  contains: function(value) {
+  _contains: function(value) {
 
   },
 
-  depthFirstLog : function(iterator) {
+  _depthFirstLog : function(iterator) {
 
   }
 };
